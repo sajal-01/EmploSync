@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import arrowRight from './assets/arrow.png';
 import { StatusBar } from 'expo-status-bar';
+
 import {
   Platform,
   Text,
@@ -8,7 +9,9 @@ import {
   StyleSheet,
   TouchableOpacity,
   LayoutAnimation,
+  Button,
 } from 'react-native';
+import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import { useDrawerStatus } from '@react-navigation/drawer';
 import { Feather } from '@expo/vector-icons';
@@ -67,6 +70,16 @@ export default function Home() {
     text = JSON.stringify(location);
   }
 
+  // navigate
+  const testRequest = async () => {
+    try {
+      const response = await axios.get('http://localhost:8000');
+      console.log(response.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
     <View
       style={{
@@ -103,6 +116,7 @@ export default function Home() {
       >
         Hi! Employee
       </Text>
+      <Button title="Test" onPress={testRequest} />
       <Text
         style={{
           textAlign: 'left',
