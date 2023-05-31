@@ -1,29 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import arrowRight from './assets/arrow.png';
 import { StatusBar } from 'expo-status-bar';
-
-import {
-  Platform,
-  Text,
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  LayoutAnimation,
-  Button,
-} from 'react-native';
-import axios from 'axios';
+import { Text, View, StyleSheet, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useDrawerStatus } from '@react-navigation/drawer';
 import { Feather } from '@expo/vector-icons';
-import { AntDesign } from '@expo/vector-icons';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import MapView, { Marker } from 'react-native-maps';
 import SwipeButton from 'rn-swipe-button';
-
+import * as SecureStore from 'expo-secure-store';
+import { TouchableOpacity } from 'react-native';
+import axios from 'axios';
+import { getDistance } from 'geolib';
 export default function Home() {
   const nav = useNavigation();
-  const drawerStatus = useDrawerStatus();
+
+  const [token, setToken] = useState(null);
+
+  const [user, setUser] = useState(null);
 
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -33,14 +27,126 @@ export default function Home() {
     latitudeDelta: 0.01,
     longitudeDelta: 0.01,
   });
-  const [isPunchIn, setIsPunchIn] = useState(false);
+  const [constructionLocation, setConstructionLocation] = useState({
+    latitude: 37.78825,
+    longitude: -122.4324,
+  });
+  const [isPunchIn, setIsPunchIn] = useState(true);
 
-  const handleSwipeSuccess = () => {
-    setIsPunchIn((prevState) => !prevState);
-    if (isPunchIn) {
-      alert('Punch In Successful!');
-    } else {
-      alert('Punch Out Successful!');
+  const getLocation = async () => {
+    try {
+      await axios
+        .get('https://3475-2a09-bac1-3680-58-00-27c-3a.ngrok-free.app/location')
+        .then((response) => {
+          console.log(response.data);
+          if (response?.data?.status === 200) {
+            setConstructionLocation({
+              latitude: response?.data?.location?.latitude,
+              longitude: response?.data?.location?.longitude,
+            });
+          } else {
+            alert(response?.data?.message);
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+          alert(error);
+        });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const punchIn = async () => {
+    let distance = getDistance(
+      {
+        latitude: region.latitude,
+        longitude: region.longitude,
+      },
+      {
+        latitude: constructionLocation.latitude,
+        longitude: constructionLocation.longitude,
+      }
+    );
+    console.log(distance);
+    if (distance > 100) {
+      alert('You are not inside the construction location');
+      return;
+    }
+
+    try {
+      await axios
+        .post(
+          'https://3475-2a09-bac1-3680-58-00-27c-3a.ngrok-free.app/punchin',
+          {
+            id: user?.id,
+            date: new Date(),
+            time: new Date(),
+            latitude: region.latitude,
+            longitude: region.longitude,
+          }
+        )
+        .then((response) => {
+          console.log(response.data);
+          if (response?.data?.status === 200) {
+            alert(response?.data?.message);
+            setIsPunchIn(false);
+          } else {
+            alert(response?.data?.message);
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+          alert(error);
+        });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const punchOut = async () => {
+    let distance = getDistance(
+      {
+        latitude: region.latitude,
+        longitude: region.longitude,
+      },
+      {
+        latitude: constructionLocation.latitude,
+        longitude: constructionLocation.longitude,
+      }
+    );
+    console.log(distance);
+    if (distance > 100) {
+      alert('You are not inside the construction location');
+      return;
+    }
+    try {
+      await axios
+        .post(
+          'https://3475-2a09-bac1-3680-58-00-27c-3a.ngrok-free.app/punchout',
+          {
+            id: user?.id,
+            date: new Date(),
+            time: new Date(),
+            latitude: region.latitude,
+            longitude: region.longitude,
+          }
+        )
+        .then((response) => {
+          console.log(response.data);
+          if (response?.data?.status === 200) {
+            alert(response?.data?.message);
+            setIsPunchIn(true);
+          } else {
+            alert(response?.data?.message);
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+          alert(error);
+        });
+    } catch (error) {
+      console.log(error);
     }
   };
 
@@ -61,6 +167,17 @@ export default function Home() {
         longitudeDelta: 0.01,
       });
     })();
+
+    const getUser = async () => {
+      const token = await SecureStore.getItemAsync('token');
+      const user = await SecureStore.getItemAsync('user');
+      setUser(JSON.parse(user));
+      setToken(token);
+    };
+    getUser();
+    getLocation();
+
+    console.log(user);
   }, []);
 
   let text = 'Waiting..';
@@ -70,15 +187,7 @@ export default function Home() {
     text = JSON.stringify(location);
   }
 
-  // navigate
-  const testRequest = async () => {
-    try {
-      const response = await axios.get('http://localhost:8000');
-      console.log(response.data);
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  console.log('isPunchIn', isPunchIn);
 
   return (
     <View
@@ -94,8 +203,8 @@ export default function Home() {
           justifyContent: 'space-between',
           flexDirection: 'row',
           marginTop: 50,
-          marginLeft: 20,
-          marginRight: 20,
+          marginLeft: 30,
+          marginRight: 30,
         }}
       >
         <Feather
@@ -104,7 +213,22 @@ export default function Home() {
           color="black"
           onPress={() => nav.toggleDrawer()}
         />
-        <Ionicons name="person-circle-outline" size={40} color="black" />
+        {user?.pic ? (
+          <TouchableOpacity onPress={() => nav.navigate('Profile')}>
+            <Image
+              source={{
+                uri: user?.pic,
+              }}
+              style={{
+                width: 50,
+                height: 50,
+                borderRadius: 50,
+              }}
+            />
+          </TouchableOpacity>
+        ) : (
+          <Ionicons name="person-circle-outline" size={50} color="black" />
+        )}
       </View>
       <Text
         style={{
@@ -114,9 +238,8 @@ export default function Home() {
           marginBottom: 0,
         }}
       >
-        Hi! Employee
+        Hi! {user ? user?.name : 'User'}
       </Text>
-      <Button title="Test" onPress={testRequest} />
       <Text
         style={{
           textAlign: 'left',
@@ -125,7 +248,7 @@ export default function Home() {
           marginTop: 5,
         }}
       >
-        Emp ID: XXXXX
+        Emp ID: {user ? user?.id : 'XXXXX'}
       </Text>
 
       <View
@@ -182,10 +305,16 @@ export default function Home() {
             swipeSuccessThreshold={60}
             height={45}
             width={300}
-            title={isPunchIn ? 'Punch Out' : 'Punch In'}
+            title={!isPunchIn ? 'Punch Out' : 'Punch In'}
             titleColor="black"
             shouldResetAfterSuccess={true}
-            onSwipeSuccess={handleSwipeSuccess}
+            onSwipeSuccess={() => {
+              if (!isPunchIn) {
+                punchOut();
+              } else {
+                punchIn();
+              }
+            }}
             railFillBackgroundColor="black"
             railFillBorderColor="black"
             thumbIconBackgroundColor="#ffffff"
@@ -199,14 +328,10 @@ export default function Home() {
             thumbIconStyles={{
               backgroundColor: isPunchIn ? '#ffffff' : 'black',
             }}
-            onSwipeStart={() => {
-              setIsPunchIn((prevState) => !prevState);
-            }}
           />
         </View>
       </View>
 
-      {/* <Button title="Go to settings" onPress={() => nav.navigate('Settings')} /> */}
       <StatusBar style="auto" />
     </View>
   );

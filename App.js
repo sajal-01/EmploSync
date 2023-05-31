@@ -1,20 +1,38 @@
-import React, { useEffect } from 'react';
-import { createDrawerNavigator } from '@react-navigation/drawer';
+import React, { useEffect, useState } from 'react';
+import {
+  createDrawerNavigator,
+  DrawerContentScrollView,
+  DrawerItemList,
+  DrawerItem,
+} from '@react-navigation/drawer';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
+import * as SecureStore from 'expo-secure-store';
+import { AntDesign } from '@expo/vector-icons';
+import axios from 'axios';
+import { MaterialIcons } from '@expo/vector-icons';
+
 import Home from './Home';
 import Settings from './Settings';
 import Auth from './Auth';
-// import Leave from './Leave';
-// import Work from './Work';
-import { AntDesign } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
+import Login from './Login';
+import Signup from './Signup';
+import Onboarding from './Onboarding';
+import Profile from './Profile';
+import Leave from './Leave';
+import Work from './Work';
+import AllLeaveApplication from './AllLeaveApplication';
+import AllWorkDone from './AllWorkDone';
+import AllProfile from './AllProfile';
+import AllPaySlips from './AllPaySlips';
+import AddLocation from './AddLocation';
 
 const Drawer = createDrawerNavigator();
+const Stack = createNativeStackNavigator();
 
 export default function App() {
-  const getIsSignedIn = () => {
-    const isSignedIn = AsyncStorage.getItem('isSignedIn');
+  const getIsSignedIn = async () => {
+    const isSignedIn = await SecureStore.getItemAsync('isSignedIn');
     if (isSignedIn === null) {
       return false;
     } else {
@@ -22,11 +40,23 @@ export default function App() {
     }
   };
 
-  const [isSignedIn, setIsSignedIn] = React.useState(getIsSignedIn());
+  const [isSignedIn, setIsSignedIn] = useState(getIsSignedIn());
+  const [user, setUser] = useState(null);
+
+  const handleLogout = async () => {
+    try {
+      await SecureStore.deleteItemAsync('token');
+      await SecureStore.setItemAsync('isSignedIn', 'false');
+      alert('Logout Successful!');
+      setIsSignedIn(false);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   useEffect(() => {
     const checkAuth = async () => {
-      const token = await AsyncStorage.getItem('token');
+      const token = await SecureStore.getItemAsync('token');
       if (token) {
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         setIsSignedIn(true);
@@ -35,12 +65,42 @@ export default function App() {
       }
     };
     checkAuth();
+  }, [isSignedIn, setIsSignedIn, SecureStore]);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const user = await SecureStore.getItemAsync('user');
+      setUser(JSON.parse(user));
+    };
+    getUser();
   }, []);
+
+  console.log(user?.role);
 
   return (
     <NavigationContainer>
-      {!isSignedIn ? (
-        <Drawer.Navigator initialRouteName="Home">
+      {isSignedIn ? (
+        <Drawer.Navigator
+          initialRouteName="Home"
+          drawerContent={(props) => (
+            <DrawerContentScrollView {...props}>
+              <DrawerItemList {...props} />
+              <DrawerItem
+                label="Logout"
+                icon={({ focused, size }) => (
+                  <AntDesign
+                    name="logout"
+                    size={size}
+                    color={focused ? '#7cc' : '#ccc'}
+                  />
+                )}
+                onPress={() => {
+                  handleLogout();
+                }}
+              />
+            </DrawerContentScrollView>
+          )}
+        >
           <Drawer.Screen
             name="Home"
             component={Home}
@@ -56,8 +116,8 @@ export default function App() {
             }}
           />
           <Drawer.Screen
-            name="Profile"
-            component={Settings}
+            name="My Profile"
+            component={Profile}
             options={{
               headerShown: false,
               drawerIcon: ({ focused, size }) => (
@@ -69,9 +129,92 @@ export default function App() {
               ),
             }}
           />
+
+          {user?.role === 'admin' && (
+            <Drawer.Screen
+              name="All Employees"
+              component={AllProfile}
+              options={{
+                headerShown: false,
+                drawerIcon: ({ focused, size }) => (
+                  <AntDesign
+                    name="team"
+                    size={size}
+                    color={focused ? '#7cc' : '#ccc'}
+                  />
+                ),
+              }}
+            />
+          )}
+          {user?.role === 'admin' && (
+            <Drawer.Screen
+              name="AllWorkDone"
+              component={AllWorkDone}
+              initialParams={{ user: user }}
+              options={{
+                headerShown: false,
+                drawerItemStyle: { height: 0 },
+                drawerIcon: ({ focused, size }) => (
+                  <AntDesign
+                    name="tool"
+                    size={size}
+                    color={focused ? '#7cc' : '#ccc'}
+                  />
+                ),
+              }}
+            />
+          )}
+          {user?.role === 'admin' && (
+            <Drawer.Screen
+              name="All PaySlips"
+              component={AllPaySlips}
+              options={{
+                headerShown: false,
+                drawerIcon: ({ focused, size }) => (
+                  <AntDesign
+                    name="pay-circle1"
+                    size={size}
+                    color={focused ? '#7cc' : '#ccc'}
+                  />
+                ),
+              }}
+            />
+          )}
+          {user?.role === 'admin' && (
+            <Drawer.Screen
+              name="All Leave Application"
+              component={AllLeaveApplication}
+              options={{
+                headerShown: false,
+                drawerIcon: ({ focused, size }) => (
+                  <AntDesign
+                    name="retweet"
+                    size={size}
+                    color={focused ? '#7cc' : '#ccc'}
+                  />
+                ),
+              }}
+            />
+          )}
+          {user?.role === 'admin' && (
+            <Drawer.Screen
+              name="Add Location"
+              component={AddLocation}
+              options={{
+                headerShown: false,
+                drawerIcon: ({ focused, size }) => (
+                  <MaterialIcons
+                    name="add-location"
+                    size={size}
+                    color={focused ? '#7cc' : '#ccc'}
+                  />
+                ),
+              }}
+            />
+          )}
           <Drawer.Screen
             name="Work Done"
-            component={Settings}
+            component={Work}
             options={{
               headerShown: false,
               drawerIcon: ({ focused, size }) => (
@@ -85,7 +228,7 @@ export default function App() {
           />
           <Drawer.Screen
             name="Leave Application"
-            component={Settings}
+            component={Leave}
             options={{
               headerShown: false,
               drawerIcon: ({ focused, size }) => (
@@ -99,7 +242,7 @@ export default function App() {
           />
           <Drawer.Screen
             name="Onboarding"
-            component={Settings}
+            component={Onboarding}
             options={{
               headerShown: false,
               drawerIcon: ({ focused, size }) => (
@@ -125,23 +268,54 @@ export default function App() {
               ),
             }}
           />
-          <Drawer.Screen
-            name="Logout"
+        </Drawer.Navigator>
+      ) : (
+        <Stack.Navigator initialRouteName="Auth">
+          <Stack.Screen
+            name="Login"
+            options={{
+              headerShown: false,
+              drawerIcon: ({ focused, size }) => (
+                <AntDesign
+                  name="login"
+                  size={size}
+                  color={focused ? '#7cc' : '#ccc'}
+                />
+              ),
+            }}
+          >
+            {(props) => <Login {...props} setIsSignedIn={setIsSignedIn} />}
+          </Stack.Screen>
+          <Stack.Screen
+            name="Signup"
+            options={{
+              headerShown: false,
+              drawerIcon: ({ focused, size }) => (
+                <AntDesign
+                  name="login"
+                  size={size}
+                  color={focused ? '#7cc' : '#ccc'}
+                />
+              ),
+            }}
+          >
+            {(props) => <Signup {...props} setIsSignedIn={setIsSignedIn} />}
+          </Stack.Screen>
+          <Stack.Screen
+            name="Auth"
             component={Auth}
             options={{
               headerShown: false,
               drawerIcon: ({ focused, size }) => (
                 <AntDesign
-                  name="logout"
+                  name="login"
                   size={size}
                   color={focused ? '#7cc' : '#ccc'}
                 />
               ),
             }}
           />
-        </Drawer.Navigator>
-      ) : (
-        <Auth />
+        </Stack.Navigator>
       )}
     </NavigationContainer>
   );

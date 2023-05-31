@@ -1,186 +1,229 @@
-// import React, { useState } from 'react';
-// import {
-//   View,
-//   Text,
-//   StyleSheet,
-//   TouchableOpacity,
-//   Image,
-//   TextInput,
-// } from 'react-native';
-// import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
-// import ImagePicker from 'react-native-image-picker';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useNavigation } from '@react-navigation/native';
+import * as SecureStore from 'expo-secure-store';
+import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
+import { storage } from './firebase';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { Feather } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
+import {
+  Image,
+  View,
+  Platform,
+  Text,
+  SafeAreaView,
+  TextInput,
+  TouchableOpacity,
+  Button,
+  ScrollView,
+} from 'react-native';
+export default function Work() {
+  const nav = useNavigation();
+  const [user, setUser] = useState(null);
+  const [description, setDescription] = useState('');
+  const [url, setUrl] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-// export default function Work() {
-//   const [index, setIndex] = useState(0);
+  const login = async () => {
+    setLoading(true);
 
-//   const [routes] = useState([
-//     { key: 'post', title: 'Post' },
-//     { key: 'show', title: 'Show' },
-//   ]);
+    try {
+      const user = await SecureStore.getItemAsync('user');
 
-//   const renderScene = SceneMap({
-//     post: PostTab,
-//     show: ShowTab,
-//   });
+      await axios
+        .post(
+          'https://3475-2a09-bac1-3680-58-00-27c-3a.ngrok-free.app/workdone',
+          {
+            id: JSON.parse(user)?.id,
+            photo: url,
+            description: description,
+            date: new Date(),
+            time: new Date(),
+          }
+        )
+        .then((response) => {
+          console.log(response.data);
+          if (response?.data?.status === 200) {
+            alert(response?.data?.message);
+            setLoading(false);
+            setUrl([]);
+            setDescription('');
+            nav.navigate('Home');
+            // reload the page
+          } else {
+            setLoading(false);
+            alert(response?.data?.message);
+          }
+        })
+        .catch((error) => {
+          setLoading(false);
+          console.log(error);
+          alert(error);
+        });
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
-//   const renderTabBar = (props) => (
-//     <TabBar
-//       {...props}
-//       indicatorStyle={styles.tabIndicator}
-//       style={styles.tabBar}
-//       labelStyle={styles.tabLabel}
-//     />
-//   );
+  const pickImage = async () => {
+    try {
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.All,
+        allowsEditing: true,
+        aspect: [16, 9],
+        quality: 0.7,
+      });
+      let localUri = result.uri;
+      let filename = localUri.split('/').pop();
 
-//   return (
-//     <View style={styles.container}>
-//       <Text style={styles.heading}>Work Done</Text>
-//       <TabView
-//         navigationState={{ index, routes }}
-//         renderScene={renderScene}
-//         onIndexChange={setIndex}
-//         renderTabBar={renderTabBar}
-//       />
-//     </View>
-//   );
-// }
+      let match = /\.(\w+)$/.exec(filename);
+      //   let type = match ? `image/${match[1]}` : `image`;
 
-// const ShowTab = () => {
-//   const items = [
-//     {
-//       id: 1,
-//       image: require('./images/image1.jpg'),
-//       description: 'screenshot of page 1',
-//     },
-//     {
-//       id: 2,
-//       image: require('./images/image2.jpg'),
-//       description: 'screenshot of page 2',
-//     },
-//     {
-//       id: 3,
-//       image: require('./images/image3.jpg'),
-//       description: 'screenshot of page 3',
-//     },
-//   ];
+      const path = `profile/${filename}`;
+      const storageRef = ref(storage, path);
+      const fileRef = storageRef;
+      const response = await fetch(localUri);
+      const blob = await response.blob();
+      const snapshot = await uploadBytesResumable(fileRef, blob);
+      console.log('Uploaded a blob or file!');
+      const url = await getDownloadURL(ref(storage, path));
 
-//   return (
-//     <View style={{ flex: 1 }}>
-//       {items.map((item) => (
-//         <View
-//           key={item.id}
-//           style={{ flexDirection: 'row', alignItems: 'center', padding: 10 }}
-//         >
-//           <Image
-//             source={item.image}
-//             style={{ width: 50, height: 50, marginRight: 10 }}
-//           />
-//           <Text>{item.description}</Text>
-//         </View>
-//       ))}
-//     </View>
-//   );
-// };
+      console.log(url);
+      let newUrl = url;
+      setUrl((prev) => [...prev, newUrl]);
+    } catch (E) {
+      console.log(E);
+    }
+  };
 
-// const PostTab = () => {
-//   const [image, setImage] = useState(null);
-//   const [description, setDescription] = useState('');
+  useEffect(() => {
+    const getUser = async () => {
+      const user = await SecureStore.getItemAsync('user');
+      setUser(JSON.parse(user));
+    };
+    getUser();
+  }, []);
 
-//   const handleChoosePhoto = () => {
-//     const options = {
-//       noData: true,
-//     };
-//     ImagePicker.launchImageLibrary(options, (response) => {
-//       if (response.uri) {
-//         setImage(response);
-//       }
-//     });
-//   };
+  return (
+    <>
+      <View
+        style={{
+          alignItems: 'center',
+          display: 'flex',
+          justifyContent: 'space-between',
+          flexDirection: 'row',
+          marginTop: 50,
+          marginLeft: 30,
+          marginRight: 30,
+          marginBottom: 20,
+        }}
+      >
+        <Feather
+          name="menu"
+          size={40}
+          color="black"
+          onPress={() => nav.toggleDrawer()}
+        />
+        {user?.pic ? (
+          <Image
+            source={{
+              uri: user?.pic,
+            }}
+            style={{
+              width: 50,
+              height: 50,
+              borderRadius: 50,
+            }}
+          />
+        ) : (
+          <Ionicons name="person-circle-outline" size={50} color="black" />
+        )}
+      </View>
+      <ScrollView
+        style={{
+          height: '100%',
+        }}
+      >
+        <View
+          style={{
+            marginHorizontal: 20,
+          }}
+        >
+          <View
+            style={{ flexDirection: 'row', justifyContent: 'space-between' }}
+          >
+            <Text style={{ fontSize: 20, fontWeight: 'bold' }}>
+              Work Done Form
+            </Text>
+          </View>
 
-//   const handleSave = () => {
-//     // Add code to save the image and description here
-//   };
+          <View
+            style={{
+              flexDirection: 'column',
+              marginVertical: 20,
+            }}
+          >
+            <View
+              style={{
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                display: 'flex',
+                flexDirection: 'row',
+                flexWrap: 'wrap',
+              }}
+            >
+              {url?.map((item, id) => {
+                return (
+                  <Image
+                    key={id}
+                    source={{ uri: item }}
+                    style={{
+                      width: 150,
+                      height: 150,
+                      borderRadius: 10,
+                      margin: 5,
+                    }}
+                  />
+                );
+              })}
+            </View>
 
-//   return (
-//     <View style={{ flex: 1 }}>
-//       <TouchableOpacity style={styles.uploadButton} onPress={handleChoosePhoto}>
-//         <Text style={styles.uploadButtonText}>Choose Photo</Text>
-//       </TouchableOpacity>
-//       {image && (
-//         <Image
-//           source={{ uri: image.uri }}
-//           style={{ width: 200, height: 200 }}
-//         />
-//       )}
-//       <TextInput
-//         value={description}
-//         onChangeText={setDescription}
-//         placeholder="Description"
-//         style={styles.descriptionInput}
-//         multiline={true}
-//         numberOfLines={4}
-//       />
-//       <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-//         <Text style={styles.saveButtonText}>Save</Text>
-//       </TouchableOpacity>
-//     </View>
-//   );
-// };
+            <Button title="Pick an image" onPress={pickImage} />
 
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: '#E1FFEE',
-//     color: '#141414',
-//     fontFamily: 'VarelaRound-Regular',
-//   },
-//   heading: {
-//     fontSize: 20,
-//     fontWeight: 'bold',
-//     textAlign: 'center',
-//     marginVertical: 20,
-//   },
-//   tabBar: {
-//     backgroundColor: '#f2f2f2',
-//   },
-//   tabLabel: {
-//     color: '#333',
-//     fontSize: 16,
-//     fontWeight: 'bold',
-//   },
-//   tabIndicator: {
-//     backgroundColor: '#333',
-//   },
-//   uploadButton: {
-//     backgroundColor: '#333',
-//     paddingHorizontal: 20,
-//     paddingVertical: 10,
-//     borderRadius: 5,
-//     alignSelf: 'center',
-//     marginVertical: 20,
-//   },
-//   uploadButtonText: {
-//     color: '#fff',
-//     fontSize: 16,
-//     fontWeight: 'bold',
-//   },
-//   descriptionInput: {
-//     borderWidth: 1,
-//     borderColor: '#ccc',
-//     borderRadius: 5,
-//     padding: 10,
-//     margin: 20,
-//   },
-//   saveButton: {
-//     backgroundColor: '#333',
-//     paddingHorizontal: 20,
-//     paddingVertical: 10,
-//     borderRadius: 5,
-//     alignSelf: 'center',
-//   },
-//   saveButtonText: {
-//     color: '#fff',
-//     fontSize: 16,
-//     fontWeight: 'bold',
-//   },
-// });
+            <TextInput
+              placeholder="description"
+              value={description}
+              onChangeText={(text) => setDescription(text)}
+              style={{
+                borderWidth: 1,
+                borderColor: 'black',
+                borderRadius: 10,
+                marginTop: 20,
+                margin: 2,
+                padding: 20,
+                backgroundColor: '#f2f2f2',
+              }}
+            />
+          </View>
+          <View style={{ alignItems: 'center', paddingBottom: 50 }}>
+            <TouchableOpacity
+              onPress={() => login()}
+              style={{
+                backgroundColor: '#90c8da',
+                borderRadius: 20,
+                padding: 10,
+                width: 200,
+                alignItems: 'center',
+              }}
+            >
+              <Text style={{ fontSize: 20, fontWeight: 'bold' }}>
+                {loading ? 'Loading...' : 'Submit'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </>
+  );
+}
