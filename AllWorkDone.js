@@ -30,7 +30,7 @@ export default function AllWorkDone({ route }) {
     setCurrentUser(route.params.user);
     try {
       const res = await axios.get(
-        `https://3475-2a09-bac1-3680-58-00-27c-3a.ngrok-free.app/workdone/${currentUser?.id}`
+        `https://employsyncapi.onrender.com/workdone/${currentUser?.id}`
       );
       console.log('Leaves:', res?.data);
       setEmployees(res?.data?.work?.entries);

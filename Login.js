@@ -16,7 +16,7 @@ export default function Login({ setIsSignedIn }) {
   const login = async () => {
     setLoading(true);
     await axios
-      .post('https://3475-2a09-bac1-3680-58-00-27c-3a.ngrok-free.app/login', {
+      .post('https://employsyncapi.onrender.com/login', {
         email: email,
         password: password,
       })

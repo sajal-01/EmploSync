@@ -26,7 +26,7 @@ export default function Profile() {
   const getLeaves = async () => {
     try {
       const res = await axios.get(
-        `https://3475-2a09-bac1-3680-58-00-27c-3a.ngrok-free.app/leave/${user?.id}`
+        `https://employsyncapi.onrender.com/leave/${user?.id}`
       );
       console.log('Leaves:', res?.data);
       setLeaves(res?.data?.filter((leave) => leave?.id === user?.id));
@@ -39,7 +39,7 @@ export default function Profile() {
   const getPayslips = async () => {
     try {
       const res = await axios.get(
-        `https://3475-2a09-bac1-3680-58-00-27c-3a.ngrok-free.app/payslip/${user?.id}`
+        `https://employsyncapi.onrender.com/payslip/${user?.id}`
       );
       // console.log('Payslips:', res?.data);
       setPayslips(res?.data?.payslip?.entries);
@@ -51,7 +51,7 @@ export default function Profile() {
   const generatePayslip = async () => {
     try {
       const res = await axios.post(
-        `https://3475-2a09-bac1-3680-58-00-27c-3a.ngrok-free.app/payslip`,
+        `https://employsyncapi.onrender.com/payslip`,
         {
           id: user?.id,
           name: user?.name,

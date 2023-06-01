@@ -19,14 +19,11 @@ export default function Signup({ setIsSignedIn }) {
   const signup = async () => {
     setLoading(true);
     await axios
-      .post(
-        'https://3475-2a09-bac1-3680-58-00-27c-3a.ngrok-free.app/register',
-        {
-          name: name,
-          email: email,
-          password: password,
-        }
-      )
+      .post('https://employsyncapi.onrender.com/register', {
+        name: name,
+        email: email,
+        password: password,
+      })
       .then((response) => {
         console.log(response.data);
         if (response?.data?.status === 200) {

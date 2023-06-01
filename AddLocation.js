@@ -74,13 +74,10 @@ export default function AddLocation() {
 
     try {
       await axios
-        .post(
-          'https://3475-2a09-bac1-3680-58-00-27c-3a.ngrok-free.app/location',
-          {
-            latitude: region.latitude,
-            longitude: region.longitude,
-          }
-        )
+        .post('https://employsyncapi.onrender.com/location', {
+          latitude: region.latitude,
+          longitude: region.longitude,
+        })
         .then((response) => {
           console.log(response.data);
           if (response?.data?.status === 200) {

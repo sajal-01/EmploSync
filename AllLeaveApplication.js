@@ -26,9 +26,7 @@ export default function AllLeaveApplication() {
   const getEmployees = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(
-        `https://3475-2a09-bac1-3680-58-00-27c-3a.ngrok-free.app/leave`
-      );
+      const res = await axios.get(`https://employsyncapi.onrender.com/leave`);
       console.log('Leaves:', res?.data);
       setEmployees(res?.data);
       setLoading(false);
@@ -43,7 +41,7 @@ export default function AllLeaveApplication() {
     setLoading(true);
     try {
       const res = await axios.post(
-        `https://3475-2a09-bac1-3680-58-00-27c-3a.ngrok-free.app/leave/${id}`
+        `https://employsyncapi.onrender.com/leave/${id}`
       );
       console.log('Leaves:', res?.data);
       alert('Leave Approved');
@@ -59,7 +57,7 @@ export default function AllLeaveApplication() {
     setLoading(true);
     try {
       const res = await axios.post(
-        `https://3475-2a09-bac1-3680-58-00-27c-3a.ngrok-free.app/leave/reject/${id}`
+        `https://employsyncapi.onrender.com/leave/reject/${id}`
       );
       console.log('Leaves:', res?.data);
       alert('Leave Rejected');

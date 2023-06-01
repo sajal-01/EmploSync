@@ -32,7 +32,7 @@ export default function Leave() {
 
     try {
       await axios
-        .post('https://3475-2a09-bac1-3680-58-00-27c-3a.ngrok-free.app/leave', {
+        .post('https://employsyncapi.onrender.com/leave', {
           id: user?.id,
           startDate: startDate,
           endDate: endDate,

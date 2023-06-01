@@ -39,18 +39,15 @@ export default function Onboarding() {
       const user = await SecureStore.getItemAsync('user');
 
       await axios
-        .post(
-          'https://3475-2a09-bac1-3680-58-00-27c-3a.ngrok-free.app/onboard',
-          {
-            id: JSON.parse(user)?.id,
-            dob: date,
-            designation: designation,
-            number: number,
-            profilePic: url,
-            Adahar: adhaar,
-            PAN: pan,
-          }
-        )
+        .post('https://employsyncapi.onrender.com/onboard', {
+          id: JSON.parse(user)?.id,
+          dob: date,
+          designation: designation,
+          number: number,
+          profilePic: url,
+          Adahar: adhaar,
+          PAN: pan,
+        })
         .then((response) => {
           console.log(response.data);
           if (response?.data?.status === 200) {

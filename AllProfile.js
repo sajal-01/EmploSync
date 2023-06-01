@@ -27,7 +27,7 @@ export default function AllProfile() {
     setLoading(true);
     try {
       const res = await axios.get(
-        `https://3475-2a09-bac1-3680-58-00-27c-3a.ngrok-free.app/employees`
+        `https://employsyncapi.onrender.com/employees`
       );
       console.log('Leaves:', res?.data);
       setEmployees(res?.data);
@@ -42,7 +42,7 @@ export default function AllProfile() {
     setLoading(true);
     try {
       const res = await axios.post(
-        `https://3475-2a09-bac1-3680-58-00-27c-3a.ngrok-free.app/approve/${id}`
+        `https://employsyncapi.onrender.com/approve/${id}`
       );
       console.log('Leaves:', res?.data);
       getEmployees();
@@ -58,7 +58,7 @@ export default function AllProfile() {
     setLoading(true);
     try {
       const res = await axios.post(
-        `https://3475-2a09-bac1-3680-58-00-27c-3a.ngrok-free.app/reject/${id}`
+        `https://employsyncapi.onrender.com/reject/${id}`
       );
       console.log('Leaves:', res?.data);
       getEmployees();

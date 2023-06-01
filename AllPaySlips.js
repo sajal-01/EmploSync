@@ -27,7 +27,7 @@ export default function AllPaySlips() {
     setLoading(true);
     try {
       const res = await axios.get(
-        `https://3475-2a09-bac1-3680-58-00-27c-3a.ngrok-free.app/payslips`
+        `https://employsyncapi.onrender.com/payslips`
       );
       //   setEmployees(res?.data?.payslips?.entries);
       setEmployees(res?.data?.payslips[0]?.entries);

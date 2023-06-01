@@ -33,16 +33,13 @@ export default function Work() {
       const user = await SecureStore.getItemAsync('user');
 
       await axios
-        .post(
-          'https://3475-2a09-bac1-3680-58-00-27c-3a.ngrok-free.app/workdone',
-          {
-            id: JSON.parse(user)?.id,
-            photo: url,
-            description: description,
-            date: new Date(),
-            time: new Date(),
-          }
-        )
+        .post('https://employsyncapi.onrender.com/workdone', {
+          id: JSON.parse(user)?.id,
+          photo: url,
+          description: description,
+          date: new Date(),
+          time: new Date(),
+        })
         .then((response) => {
           console.log(response.data);
           if (response?.data?.status === 200) {

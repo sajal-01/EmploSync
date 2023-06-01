@@ -36,7 +36,7 @@ export default function Home() {
   const getLocation = async () => {
     try {
       await axios
-        .get('https://3475-2a09-bac1-3680-58-00-27c-3a.ngrok-free.app/location')
+        .get('https://employsyncapi.onrender.com/location')
         .then((response) => {
           console.log(response.data);
           if (response?.data?.status === 200) {
@@ -76,16 +76,13 @@ export default function Home() {
 
     try {
       await axios
-        .post(
-          'https://3475-2a09-bac1-3680-58-00-27c-3a.ngrok-free.app/punchin',
-          {
-            id: user?.id,
-            date: new Date(),
-            time: new Date(),
-            latitude: region.latitude,
-            longitude: region.longitude,
-          }
-        )
+        .post('https://employsyncapi.onrender.com/punchin', {
+          id: user?.id,
+          date: new Date(),
+          time: new Date(),
+          latitude: region.latitude,
+          longitude: region.longitude,
+        })
         .then((response) => {
           console.log(response.data);
           if (response?.data?.status === 200) {
@@ -122,16 +119,13 @@ export default function Home() {
     }
     try {
       await axios
-        .post(
-          'https://3475-2a09-bac1-3680-58-00-27c-3a.ngrok-free.app/punchout',
-          {
-            id: user?.id,
-            date: new Date(),
-            time: new Date(),
-            latitude: region.latitude,
-            longitude: region.longitude,
-          }
-        )
+        .post('https://employsyncapi.onrender.com/punchout', {
+          id: user?.id,
+          date: new Date(),
+          time: new Date(),
+          latitude: region.latitude,
+          longitude: region.longitude,
+        })
         .then((response) => {
           console.log(response.data);
           if (response?.data?.status === 200) {
